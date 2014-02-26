@@ -1,4 +1,4 @@
 INVEST
 ======
 
-Code repository for INVEST proejct
+Code repository for INVEST project
