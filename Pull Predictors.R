@@ -34,6 +34,7 @@ loadPredictorObservations <- function(){
   #########
   
   d.R <- (uplTS[,"Close"] - lag1[,"Close"]) / lag1[,"Close"]
+  d.log.R <- log(d.R+1)
   a.5day <- rollmean(uplTS[,"Close"], 5, align="right")
   a.20day <- rollmean(uplTS[,"Close"], 20, align="right")
   a.200day <- rollmean(uplTS[,"Close"], 200, align="right")
@@ -49,13 +50,15 @@ loadPredictorObservations <- function(){
                         coredata(a.20day["2013"]),
                         coredata(a.200day["2013"]),
                         coredata(uplTS["2013","Close"]),
-                        coredata(d.R["2013"])
+                        coredata(d.R["2013"]),
+                        coredata(d.log.R["2013"])
                         )
   names(observationDF) <- c("avg5day",
                             "avg20day",
                             "avg200day", 
                             "close", 
-                            "daily.return")
+                            "daily.return",
+                            "daily.log.return")
   
   return(observationDF)
 }
