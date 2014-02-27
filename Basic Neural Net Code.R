@@ -5,6 +5,8 @@ library('forecast')
 library('quantmod')
 library('zoo')
 library('neuralnet')
+
+set.seed(2014)
 # parameter inputs
 stock<-'UPL' # Enter Stock. Default UPL
 start_date<-20110101 # Enter beginning date. Format (YYYYMMDD)
