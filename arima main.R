@@ -1,0 +1,107 @@
+#initial installs addon package
+install.packages('quantmod')
+install.packages('forecast')
+install.packages('astsa')
+
+library('forecast')
+library('quantmod')
+library('astsa')
+
+# parameter inputs
+stock<-'UPL'          # Enter Stock. Default UPL
+start_date<-20130101  # Enter beginning date. Format (YYYYMMDD)
+end_date<- 20131231   # Enter ending date. Format (YYYYMMDD)
+
+# retrieves stock data
+data<-getYahooData(symbol=stock,
+                  start=start_date,
+                  end=end_date
+                  )
+
+#Graphs current data
+plot(data$Close)
+
+#Log Transformation
+log_close<-log(data$Close)
+
+#plot log data
+plot(log_close)
+
+#diagnostic plots for normality
+par(mfrow=c(2,1))
+hist(log_close, prob=TRUE, 12)
+lines(density(log_close))
+qqnorm(log_close)
+qqline(log_close)
+
+#test for correlation between lags
+lag.plot(log_close, 9, do.lines=FALSE)  
+
+#plot acf and pacf
+acf(log_close)
+pacf(log_close)
+acf2(log_close)
+
+
+
+###
+#test for differencing to achieve stationarity
+dl_close <- diff(log_close)
+plot(dl_close)
+
+#remove missing values
+dl_close2 <- na.omit(dl_close)
+
+#diagnostic plots for normality
+par(mfrow=c(2,1))
+hist(dl_close2, prob=TRUE, 12)
+lines(density(dl_close2))
+qqnorm(dl_close2)
+qqline(dl_close2)
+
+#test for correlation between lags
+lag.plot(dl_close2, 9, do.lines=FALSE)  
+
+#plot acf and pacf
+acf(dl_close2)
+pacf(dl_close2)
+###
+
+
+
+#fitting arima
+m1.0.0 <- arima(log_close,order=c(1,0,0)) #not stationary; differencing needed
+m1.1.0 <- arima(log_close,order=c(1,1,0)) #aic = -1253.73
+m1.2.0 <- arima(log_close,order=c(1,2,0)) #aic larger
+m2.1.0 <- arima(log_close,order=c(2,1,0)) #aic larger
+m1.1.1 <- arima(log_close,order=c(1,1,1)) #se > ar1, ma1
+m0.1.1 <- arima(log_close,order=c(0,1,1)) #aic = -1253.97, slightly better
+m0.2.1 <- arima(log_close,order=c(0,2,1)) #aic larger
+m0.1.2 <- arima(log_close,order=c(0,1,2)) #aic larger
+
+#m0.1.1 optimal model
+
+#plot resid and acf
+par(mfrow=c(2,1))
+plot(resid(m0.1.1))      # residuals
+acf(resid(m0.1.1),20)    # acf of the resids 
+
+#plot forecast
+plot(forecast(m0.1.1))
+
+
+#simulation
+sim.100 <- arima.sim(list(order = c(0,1,1), ma = 0.1188), n = 100)
+plot(sim.100, type = "l", main = "Simulated 100", ylab = "Log Close")
+sim.100fit <- arima(sim.100, order = c(0,1,1))
+
+sim.100fcast = predict(sim.100fit, n.ahead=10)  
+# plot the forecasts
+U = sim.100fcast$pred + 2*sim.100fcast$se
+L = sim.100fcast$pred - 2*sim.100fcast$se
+minx=min(sim.100,L)
+maxx=max(sim.100,U)
+ts.plot(sim.100,sim.100fcast$pred,col=1:2, ylim=c(minx,maxx))
+lines(U, col="blue", lty="dashed")
+lines(L, col="blue", lty="dashed") 
+
