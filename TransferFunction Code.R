@@ -14,7 +14,7 @@ library('quantmod')
 library('TSA')
 library('zoo')
 
-#read in file
+#read it in file
 stock <- read.csv('UPL2013.csv')
 
 #convert factor to date
@@ -26,6 +26,8 @@ stock.firsthalf.2013 <- stock[1:126,]
 #Graphs current data
 pdf(file = "First_Half_2013_plot.pdf", width = 11, height = 8.5)
 plot(stock.firsthalf.2013$CLOSE)
+plot(stock.firsthalf.2013$WTI)
+plot(stock.firsthalf.2013$NYMEX_NGAS)
 dev.off()
 
 #Log Transformation
@@ -61,9 +63,14 @@ arima_model <- auto.arima(as.ts(log_close.diff))
 arima_model.ngas <- auto.arima(as.ts(log_nymex_ngas.diff))
 arima_model.WTI <- auto.arima(as.ts(log_WTI.diff))
 
+#Summary of auto.arima models
+summary(arima_model)
+summary(arima_model.ngas)
+summary(arima_model.WTI)
+
 ##ARIMAX CODE##
 #nymex
-arimax.upl.nymex <- arimax(log_close.diff, order=c(0,0,1), 
+arimax.upl.ngas <- arimax(log_close.diff, order=c(0,0,1), 
                            xtransf = log_nymex_ngas.diff, 
                            transfer=list(c(2,0)), method = 'ML')
 
@@ -72,6 +79,17 @@ arimax.upl.WTI <- arimax(log_close.diff, order=c(0,0,1),
                          xtransf = log_WTI.diff, 
                          transfer=list(c(0,0)), method = 'ML') 
 
+#summary of transfer function models
+summary(arimax.upl.ngas)
+summary(arimax.upl.WTI)
+
+#Predict the two models
+pred.ngas <- predict(arimax.upl.ngas , n.ahead=10)
+pred.WTI <- predict(arimax.upl.WTI , n.ahead=10)
+
+#plot predictions
+plot(pred.ngas$se)
+plot(pred.WTI$se)
 
 #Log Transformation to entire 2013 data frame
 stock$log_close<-log(stock$CLOSE)
@@ -87,6 +105,4 @@ log_close.diff.fullyear <- diff(stock$log_close, differences=1)
 teststock <- data.frame(log_close.diff = c(log_close.diff.fullyear),
                        log_nymex_ngas.diff = c(log_nymex_ngas.diff.fullyear),
                        log_WTI.diff = c(log_WTI.diff.fullyear))
-
-
 
