@@ -22,33 +22,35 @@ predCols <- unlist(strsplit(predictors," + ", fixed = TRUE))
 
 #Calculates RMSE and RSquared
 calcStatistics <- function( results )
+  #First col of results is predicted, second is actual
 {
   #RMSE Calc
-  error <- results$net.result - trainDF[response]
+  error <- results[,1] - results[,2]
   error <- error^2
   error <- sum(error)
   RMSE  <- sqrt(error)
   print(RMSE)
   
   #R Squared Calc
-  SSR <- sum((trainDF[response] - results$net.result)^2)
-  SST <- sum((trainDF[response] - ave(unlist(trainDF[response])))^2)
+  SST <- sum((results[,2] - results[,1])^2)
+  SSR <- sum((results[,2] - ave(results[,2]))^2)
   Rsquared <- 1-(SSR/SST)
   print(Rsquared)
   
-  return c(RMSE,Rsquared)
+  return(c(RMSE,Rsquared))
 }
 
 #########
 #
 # Train neural net - try to see what a good number of hidden nodes is to use
 #
+# Takes prohibitively long with 7 hidden nodes, no apparent gain in accuracy
 #########
 for (i in 1:20){
   set.seed(123)
   print(i)
   start.time <- proc.time()
-  nn <- neuralnet( form, trainDF , hidden=i, threshold=0.01,stepmax=10^6)
+  nn <- neuralnet( form, trainDF , hidden=i, threshold=0.01,stepmax=10^5)
   #nn <- neuralnet(ROR ~ avg5day + avg20day + avg200day, trainDF , hidden=i, threshold=0.01,stepmax=10^6)
   x<-proc.time() - start.time
   print(x)
@@ -57,26 +59,12 @@ for (i in 1:20){
   cov <- subset(trainDF, select = predCols)
   results<- compute(nn,cov)  
   
-  #RMSE Calc
-  error <- results$net.result - trainDF[response]
-  error <- error^2
-  error <- sum(error)
-  RMSE  <- sqrt(error)
-  print(RMSE)
-  
-  #R Squared Calc
-  SSR <- sum((trainDF[response] - results$net.result)^2)
-  SST <- sum((trainDF[response] - ave(unlist(trainDF[response])))^2)
-  Rsquared <- 1-(SSR/SST)
-  print(Rsquared)
-}
+  allResults <- cbind(results$net.result, trainDF[response])
+  calcStatistics(allResults)
+ }
 #Comment
 
-
-
-
-#########
-#
+#####
 # Neural Net Running Time Frame
 #
 #########
@@ -88,34 +76,12 @@ for(i in 1:125){
   print(paste("Calculating day", i))
   rollingTrain <- fullDF[i:(i+125),]
    
-  nn <- neuralnet(upl.price.tomorrow ~ a.5day + a.20day + a.200day, trainDF , hidden=3, threshold=0.01,stepmax=10^6)
+  nn <- neuralnet(form, rollingTrain c, hidden=2, threshold=0.01,stepmax=10^6)
   #nn <- neuralnet(upl.daily.return.tomorrow ~ a.5day + a.20day + a.200day, trainDF , hidden=i, threshold=0.01,stepmax=10^6)
-  cols <- c("a.5day","a.20day","a.200day")
-  cov <- subset(rollingTest, select = cols)
+  
+  cov <- subset(fullDF[i+126,], select = predCols)
   result <- compute(nn,cov)
   rolling.result <- rbind(rolling.result,c(result$net.result,actuals[i+126,]))
 }
 
-#RMSE Calc
-error <- rolling.result[,1] - rolling.result[,2]
-error <- error^2
-error <- sum(error)
-RMSE  <- sqrt(error)
-print(RMSE)
-
-#R Squared Calc
-SST <- sum((rolling.result[,2] - rolling.result[,1])^2)
-SSR <- sum((rolling.result[,2] - ave(rolling.result[,2]))^2)
-Rsquared <- 1-(SSR/SST)
-print(Rsquared)
-
-#########
-#
-# Predict Results and evaluate model
-#
-#########
-#predictions <- compute(nn,testDF)
-
-#resultsMatrix <- matrix(c(coredata(uplTS["2014","Close"],predictions$net.result)), ncol=2)
-#rownames(resultsMatrix) <- c("Predicted","Actual")
-#print(resultsMatrix)
+calcStatistics(rolling.result)
