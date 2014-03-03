@@ -157,6 +157,12 @@ loadPredictorObservations <- function(){
                         coredata(oilTS["2013","Close"]) ,
                         coredata(ngTS["2013","Close"]) ,
                         coredata(snpTS["2013","Close"]) , #
+                        coredata(tnxTS["2013","Close"]),
+                        coredata(tltTS["2013","Close"]),
+                        coredata(vxxTS["2013","Close"]),
+                        coredata(uupTS["2013","Close"]),
+                        coredata(fxeTS["2013","Close"]),
+                        coredata(cadjpyTS[as.Date(index(a.fxe.200day["2013",]))]),
                         coredata(upl.Ret["2013"]),
                         coredata(oil.Ret["2013"]),
                         coredata(ng.Ret["2013"]),
@@ -248,6 +254,12 @@ loadPredictorObservations <- function(){
                             "oil.close",
                             "ng.close",
                             "snp.close",
+                            "tnx.close",
+                            "tlt.close",
+                            "vxx.close",
+                            "uup.close",
+                            "fxe.close",
+                            "cadjpy.close",
                             "upl.daily.return",
                             "oil.daily.return",
                             "ng.daily.return",
@@ -283,9 +295,9 @@ loadPredictorObservations <- function(){
                             "a.tlt.5day",
                             "a.tlt.20day",
                             "a.tlt.200day",
-                            "a.vix.5day",
-                            "a.vix.20day",
-                            "a.vix.200day",
+                            "a.vxx.5day",
+                            "a.vxx.20day",
+                            "a.vxx.200day",
                             "a.uup.5day",
                             "a.uup.20day",
                             "a.uup.200day",
@@ -336,7 +348,7 @@ loadPredictorObservations <- function(){
 printAvgCorrs <- function(symb)
 {
   pdf(paste("correlations ", symb, ".pdf", sep=""))
-  form <- formula(paste("~upl.price.tomorrow+a.",symb,".5day+a.",symb,".20day+a.",symb,".200day"  ,sep ="" ))
+  form <- formula(paste("~upl.price.tomorrow+",symb,".close+a.",symb,".5day+a.",symb,".20day+a.",symb,".200day"  ,sep ="" ))
   pairs(form,observationDF)
   dev.off()
 }
@@ -354,10 +366,12 @@ printRetCorrs <- function(symb)
   dev.off()
 }
 
-symbols <- as.matrix(c("cadjpy", "fxe", "uup", "vxx", "tlt", "tnx", "snp", "ng", "oil"))
-apply(symbols,1,printAvgCorrs)
-apply(symbols,1,printRetCorrs)
+pairs
 
-
-pairs(~upl.daily.return.tomorrow+fxe.daily.return+fxe.log.return,observationDF)
-
+outputFiles <- function(){
+  
+  symbols <- as.matrix(c("cadjpy","fxe", "uup", "vxx", "tlt", "tnx", "snp", "ng", "oil"))
+  apply(symbols,1,printAvgCorrs)
+  apply(symbols,1,printRetCorrs)
+  pairs(~upl.daily.return.tomorrow+fxe.daily.return+fxe.log.return,observationDF)
+}
