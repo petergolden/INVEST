@@ -208,3 +208,8 @@ Rsquared(roll.results.wti.log[,1],roll.results.wti.log[,2])
 Rsquared(roll.results.wti.nl[,1],roll.results.wti.nl[,2])
 Rsquared(roll.results.nymex.log[,1],roll.results.nymex.log[,2])
 Rsquared(roll.results.nymex.nl[,1],roll.results.wti.nl[,2])
+
+rmse(roll.results.wti.log[,1],roll.results.wti.log[,2])
+rmse(roll.results.wti.nl[,1],roll.results.wti.nl[,2])
+rmse(roll.results.nymex.log[,1],roll.results.nymex.log[,2])
+rmse(roll.results.nymex.nl[,1],roll.results.wti.nl[,2])
