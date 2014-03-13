@@ -13,15 +13,16 @@ library('forecast')
 library('quantmod')
 library('TSA')
 library('zoo')
+library('Metrics')
 
-#read in file
-stock <- read.csv('UPL2013.csv')
+stock <- read.csv('UPL2013_fixed.csv',
+                  colClasses = c("character","numeric","numeric","numeric"))
 
 #convert factor to date
 stock$DATE <- as.Date(stock$DATE, format = "%m/%d/%Y")
 
 #subset the first half of the year to create the models
-stock.firsthalf.2013 <- stock[1:126,]
+stock.firsthalf.2013 <- stock[1:182,]
 
 #Graphs current data
 pdf(file = "First_Half_2013_plot.pdf", width = 11, height = 8.5)
@@ -73,7 +74,7 @@ summary(arima_model.WTI)
 #nymex
 arimax.upl.ngas <- arimax(log_close.diff, order=c(0,0,1), 
                           xtransf = log_nymex_ngas.diff, 
-                          transfer=list(c(2,0)), method = 'ML')
+                          transfer=list(c(1,0)), method = 'ML')
 
 #WTI
 arimax.upl.WTI <- arimax(log_close.diff, order=c(0,0,1),
@@ -162,23 +163,23 @@ roll.results.wti.log <- data.frame (numeric(),numeric())
 roll.results.nymex.nl <- data.frame (numeric(),numeric())
 roll.results.wti.nl <- data.frame (numeric(),numeric())
 
-for (i in 1:125){
+for (i in 1:181){
   
-  roll.nymex.log <- arimax(teststock$log_close.diff[i:(i+125)], order=c(0,0,1), 
-                            xtransf = teststock$log_nymex_ngas.diff[i:(i+125)], 
-                            transfer=list(c(2,0)), method = 'ML')
+  roll.nymex.log <- arimax(teststock$log_close.diff[i:(i+182)], order=c(0,0,1), 
+                           xtransf = teststock$log_nymex_ngas.diff[i:(i+182)], 
+                           transfer=list(c(2,0)), method = 'ML')
   
-  roll.wti.log <- arimax(teststock$log_close.diff[i:(i+125)], order=c(0,0,1),
-                           xtransf = teststock$log_WTI.diff[i:(i+125)], 
-                           transfer=list(c(0,0)), method = 'ML')  
+  roll.wti.log <- arimax(teststock$log_close.diff[i:(i+182)], order=c(0,0,1),
+                         xtransf = teststock$log_WTI.diff[i:(i+182)], 
+                         transfer=list(c(0,0)), method = 'ML')  
   
-  roll.nymex.nl <- arimax(teststock.nl$close.diff[i:(i+125)], order=c(0,0,1), 
-                               xtransf = teststock.nl$log_nymex_ngas.diff[i:(i+125)], 
-                               transfer=list(c(2,0)), method = 'ML')
+  roll.nymex.nl <- arimax(teststock.nl$close.diff[i:(i+182)], order=c(0,0,1), 
+                          xtransf = teststock.nl$log_nymex_ngas.diff[i:(i+182)], 
+                          transfer=list(c(2,0)), method = 'ML')
   
-  roll.wti.nl <- arimax(teststock.nl$close.diff[i:(i+125)], order=c(0,0,1),
-                              xtransf = teststock.nl$log_WTI.diff[i:(i+125)], 
-                              transfer=list(c(0,0)), method = 'ML') 
+  roll.wti.nl <- arimax(teststock.nl$close.diff[i:(i+182)], order=c(0,0,1),
+                        xtransf = teststock.nl$log_WTI.diff[i:(i+182)], 
+                        transfer=list(c(0,0)), method = 'ML') 
   
   
   tmp.a <- predict(roll.nymex.log, n.ahead=1)[2]$se
@@ -186,10 +187,10 @@ for (i in 1:125){
   tmp.c <- predict(roll.nymex.nl, n.ahead=1)[2]$se
   tmp.d <- predict(roll.wti.nl, n.ahead=1)[2]$se
   
-  roll.results.nymex.log <- rbind(roll.results.nymex.log, c(tmp.a,teststock$log_close.diff[i+126]))
-  roll.results.wti.log <- rbind(roll.results.wti.log, c(tmp.b,teststock$log_close.diff[i+126]))
-  roll.results.nymex.nl <- rbind(roll.results.nymex.nl, c(tmp.c, teststock.nl$close.diff[i+126]))
-  roll.results.wti.nl <- rbind(roll.results.wti.nl, c(tmp.d, teststock.nl$close.diff[i+126]))
+  roll.results.nymex.log <- rbind(roll.results.nymex.log, c(tmp.a,teststock$log_close.diff[i+182]))
+  roll.results.wti.log <- rbind(roll.results.wti.log, c(tmp.b,teststock$log_close.diff[i+182]))
+  roll.results.nymex.nl <- rbind(roll.results.nymex.nl, c(tmp.c, teststock.nl$close.diff[i+182]))
+  roll.results.wti.nl <- rbind(roll.results.wti.nl, c(tmp.d, teststock.nl$close.diff[i+182]))
 }
 
 colnames(roll.results.nymex.log) <- c('Predict','Actual')
